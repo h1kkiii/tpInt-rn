@@ -54,3 +54,10 @@ export type SeccionReservas = {
   vacio: string | null;
   data: ItemReservas[];
 };
+
+export type FilaMostrador = {
+  isbn: string;
+  titulo: string;
+  frente: string;
+  cantidad: number;
+};

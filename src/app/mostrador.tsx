@@ -1,5 +1,5 @@
-import { PantallaProvisoria } from '@/components/PantallaProvisoria';
+import { PanelMostrador } from '@/components/PanelMostrador';
 
 export default function Mostrador() {
-  return <PantallaProvisoria titulo="Mostrador" />;
+  return <PanelMostrador />;
 }

@@ -89,6 +89,21 @@ export async function programarRecordatorio(prestamo: Prestamo): Promise<string 
   }
 }
 
+// Notificación inmediata de "ya podés retirar el libro". Devuelve false si no
+// se pudo mostrar, para que quien llama use el aviso dentro de la app.
+export async function notificarLibroDisponible(titulo: string): Promise<boolean> {
+  try {
+    const hayCanal = await crearCanalPrestamos();
+    await scheduleNotificationAsync({
+      content: { title: 'Tu libro te espera', body: `Ya podés retirar "${titulo}" en el mostrador de la biblioteca.` },
+      trigger: hayCanal && Platform.OS === 'android' ? { channelId: CANAL_PRESTAMOS } : null,
+    });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export async function cancelarRecordatorio(notificacionId: string): Promise<void> {
   try {
     await cancelScheduledNotificationAsync(notificacionId);
