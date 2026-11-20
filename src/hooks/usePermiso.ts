@@ -18,9 +18,17 @@ const SIN_ACCESO: PermissionResponse = {
 type ResultadoPermiso = {
   estado: EstadoPermiso;
   pedir: () => Promise<PermissionResponse>;
-  consultar: () => Promise<PermissionResponse>;
   abrirAjustes: () => void;
 };
+
+// Consulta sin diálogo; si el módulo falla, se trata como bloqueado.
+async function leerPermiso(recurso: Recurso): Promise<PermissionResponse> {
+  try {
+    return await ADAPTADORES[recurso].consultar();
+  } catch {
+    return SIN_ACCESO;
+  }
+}
 
 // Se mantiene al día solo:
 //  - al montar y cada vez que la pantalla recupera el foco (useFocusEffect),
@@ -37,17 +45,6 @@ export function usePermiso(recurso: Recurso): ResultadoPermiso {
     };
   }, []);
 
-  const consultar = useCallback(async () => {
-    let actual: PermissionResponse;
-    try {
-      actual = await ADAPTADORES[recurso].consultar();
-    } catch {
-      actual = SIN_ACCESO;
-    }
-    // Nunca se actualiza una pantalla que ya se desmontó mientras se esperaba.
-    if (montado.current) setRespuesta(actual);
-    return actual;
-  }, [recurso]);
 
   const pedir = useCallback(async () => {
     let nueva: PermissionResponse;
@@ -64,16 +61,28 @@ export function usePermiso(recurso: Recurso): ResultadoPermiso {
     Linking.openSettings().catch(() => undefined);
   }, []);
 
+  // Cada foco pide el estado; si la pantalla pierde el foco (o se desmonta)
+  // antes de la respuesta, la limpieza la descarta.
   useFocusEffect(
     useCallback(() => {
-      consultar();
-    }, [consultar]),
+      let vigente = true;
+      leerPermiso(recurso).then((actual) => {
+        if (vigente && montado.current) setRespuesta(actual);
+      });
+      return () => {
+        vigente = false;
+      };
+    }, [recurso]),
   );
 
+  // Al volver de Ajustes (AppState): la suscripción se limpia en useRevisarAlVolver
+  // y el ref montado evita actualizar una pantalla que ya no existe.
   const revisar = useCallback(() => {
-    consultar();
-  }, [consultar]);
+    leerPermiso(recurso).then((actual) => {
+      if (montado.current) setRespuesta(actual);
+    });
+  }, [recurso]);
   useRevisarAlVolver(revisar);
 
-  return { estado: estadoDesde(respuesta), pedir, consultar, abrirAjustes };
+  return { estado: estadoDesde(respuesta), pedir, abrirAjustes };
 }
