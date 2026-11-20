@@ -45,7 +45,6 @@ export function usePermiso(recurso: Recurso): ResultadoPermiso {
     };
   }, []);
 
-
   const pedir = useCallback(async () => {
     let nueva: PermissionResponse;
     try {

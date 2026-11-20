@@ -21,6 +21,6 @@ export function Cargando({ texto }: Props) {
 
 const crearEstilos = (paleta: Paleta) =>
   StyleSheet.create({
-    contenedor: { alignItems: 'center', justifyContent: 'center', gap: ESPACIO.m, padding: ESPACIO.xl },
+    contenedor: { flexGrow: 1, justifyContent: 'center', alignItems: 'center', gap: ESPACIO.m, padding: ESPACIO.xl },
     texto: { color: paleta.textoSecundario, fontSize: TAMANIO_TEXTO.normal, lineHeight: ALTO_LINEA.normal, textAlign: 'center' },
   });
