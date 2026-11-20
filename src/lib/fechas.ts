@@ -25,3 +25,19 @@ export function sumarDias(fecha: Date, dias: number): Date {
 export function formatearFecha(fecha: Date): string {
   return `${DIAS[fecha.getDay()]} ${fecha.getDate()} de ${MESES[fecha.getMonth()]}`;
 }
+
+export type MomentoRecordatorio = { tipo: 'segundos'; segundos: number } | { tipo: 'fecha'; fecha: Date };
+
+// Cuándo llega el recordatorio: en modo demostración, a los pocos segundos;
+// si no, un día antes de la devolución. Si ese día ya pasó, en la demora corta.
+export function momentoRecordatorio(
+  vence: Date,
+  ahora: Date,
+  modoDemostracion: boolean,
+  segundosDemostracion: number,
+): MomentoRecordatorio {
+  if (modoDemostracion) return { tipo: 'segundos', segundos: segundosDemostracion };
+  const fecha = sumarDias(vence, -1);
+  if (fecha.getTime() <= ahora.getTime()) return { tipo: 'segundos', segundos: segundosDemostracion };
+  return { tipo: 'fecha', fecha };
+}

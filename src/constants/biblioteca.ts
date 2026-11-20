@@ -16,3 +16,8 @@ export const DEMORA_BUSQUEDA_MS = 300;
 
 // Cuánto queda en pantalla el aviso de "ISBN desconocido" del escáner.
 export const DURACION_AVISO_ESCANER_MS = 4000;
+
+// Modo demostración: el recordatorio llega a los 15 s en lugar de un día
+// antes del vencimiento (para poder probarlo en clase).
+export const MODO_DEMOSTRACION = true;
+export const SEGUNDOS_DEMOSTRACION = 15;

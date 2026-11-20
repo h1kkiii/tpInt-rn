@@ -8,11 +8,13 @@ import { MENSAJES } from '@/constants/mensajes';
 import { ESPACIO, type Paleta } from '@/constants/tema';
 import { useEstilos } from '@/hooks/useEstilos';
 import { useMisReservas } from '@/hooks/useMisReservas';
+import { useRecordatorios } from '@/hooks/useRecordatorios';
 import { claveItemReservas } from '@/lib/reservas';
 
 export default function MisReservas() {
   const estilos = useEstilos(crearEstilos);
   const secciones = useMisReservas();
+  const recordatorios = useRecordatorios();
 
   return (
     <SectionList
@@ -21,7 +23,7 @@ export default function MisReservas() {
       contentInsetAdjustmentBehavior="automatic"
       sections={secciones}
       keyExtractor={claveItemReservas}
-      renderItem={({ item }) => <ItemReservas item={item} />}
+      renderItem={({ item }) => <ItemReservas item={item} recordatorios={recordatorios} />}
       renderSectionHeader={({ section }) => <EncabezadoSeccion titulo={section.titulo} />}
       renderSectionFooter={({ section }) => <PieSeccion seccion={section} />}
       ListEmptyComponent={<MensajeVacio texto={MENSAJES.sinPrestamos} icono="bookmark-outline" />}

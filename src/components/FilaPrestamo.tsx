@@ -1,22 +1,31 @@
 import { StyleSheet, Text, View } from 'react-native';
 
 import { Boton } from '@/components/Boton';
+import { InterruptorRecordatorio } from '@/components/InterruptorRecordatorio';
 import { ALTO_LINEA, BORDE, ESPACIO, RADIO, TAMANIO_TEXTO, type Paleta } from '@/constants/tema';
 import { useEstilos } from '@/hooks/useEstilos';
+import type { EstadoRecordatorio } from '@/hooks/useRecordatorios';
 import { formatearFecha } from '@/lib/fechas';
 import type { Prestamo } from '@/types/biblioteca';
 
 type Props = {
   prestamo: Prestamo;
+  recordatorio: EstadoRecordatorio;
+  onAlternarRecordatorio: (prestamo: Prestamo, activar: boolean) => void;
   onDevolver: (isbn: string) => void;
 };
 
-export function FilaPrestamo({ prestamo, onDevolver }: Props) {
+export function FilaPrestamo({ prestamo, recordatorio, onAlternarRecordatorio, onDevolver }: Props) {
   const estilos = useEstilos(crearEstilos);
   return (
     <View style={estilos.fila}>
       <Text style={estilos.titulo}>{prestamo.titulo}</Text>
       <Text style={estilos.fecha}>Devolvelo antes del {formatearFecha(new Date(prestamo.vence))}</Text>
+      <InterruptorRecordatorio
+        titulo={prestamo.titulo}
+        estado={recordatorio}
+        onCambiar={(activar) => onAlternarRecordatorio(prestamo, activar)}
+      />
       <Boton
         titulo="Devolver"
         icono="return-down-back"

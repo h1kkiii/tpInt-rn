@@ -20,6 +20,8 @@ export const MENSAJES = {
   reservaRepetida: 'Esta reserva ya estaba hecha: no se anotó dos veces.',
   sinPrestamos: 'No tenés libros prestados. Cuando reserves uno con ejemplares, aparece acá con su fecha de devolución.',
   sinEsperas: 'No estás en ninguna lista de espera.',
+  sinNotificaciones: 'Sin notificaciones no podemos recordártelo, pero la fecha de devolución queda siempre acá.',
+  recordatorioNoProgramado: 'No pudimos programar el recordatorio. La fecha de devolución queda siempre acá.',
   revisandoCamara: 'Revisando el permiso de la cámara…',
   cargandoCatalogoEscaner: 'Cargando el catálogo para reconocer los libros…',
   isbnEscaneadoDesconocido: (isbn: string) =>
