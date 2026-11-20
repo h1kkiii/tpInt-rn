@@ -24,6 +24,7 @@ export const MENSAJES = {
   recordatorioNoProgramado: 'No pudimos programar el recordatorio. La fecha de devolución queda siempre acá.',
   sinEspera: 'Ya no queda nadie esperando ese libro.',
   entregado: (titulo: string, persona: string) => `Se entregó "${titulo}" a ${persona}.`,
+  entregadoAUsuario: (titulo: string) => `Se entregó "${titulo}" a la persona que usa esta app ("Yo").`,
   yaPodesRetirar: (titulo: string) => `Ya podés retirar "${titulo}" en el mostrador.`,
   mostradorVacio: 'No hay libros con lista de espera. Cuando alguien se anote, aparece acá.',
   cargandoMostrador: 'Cargando las listas de espera…',

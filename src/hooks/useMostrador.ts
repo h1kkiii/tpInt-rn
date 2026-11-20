@@ -44,7 +44,11 @@ export function useMostrador() {
         setConfirmacion(MENSAJES.sinEspera);
         return;
       }
-      setConfirmacion(MENSAJES.entregado(resultado.titulo, resultado.persona));
+      setConfirmacion(
+        resultado.esUsuario
+          ? MENSAJES.entregadoAUsuario(resultado.titulo)
+          : MENSAJES.entregado(resultado.titulo, resultado.persona),
+      );
       if (!resultado.esUsuario) return;
       // Se consulta el permiso EN ESTE MOMENTO (puede haber cambiado en Ajustes):
       // con permiso, notificación; sin permiso o si falla, aviso en la app. Nunca las dos.
