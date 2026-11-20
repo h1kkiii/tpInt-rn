@@ -26,7 +26,7 @@ export type ValorBiblioteca = {
   devolver: (isbn: string) => Prestamo | null;
   definirRecordatorio: (isbn: string, notificacionId: string | null) => boolean;
   agregarReciente: (libro: LibroReciente) => void;
-  entregarAlSiguiente: (isbn: string) => ResultadoEntrega;
+  entregarAlSiguiente: (libro: Pick<Libro, 'isbn' | 'titulo'>) => ResultadoEntrega;
   agregarAviso: (texto: string) => void;
   descartarAviso: (id: string) => void;
   iniciarSesion: (usuario: string, clave: string) => boolean;
@@ -119,7 +119,9 @@ export function BibliotecaProvider({ children }: Props) {
   );
 
   const entregarAlSiguiente = useCallback(
-    (isbn: string): ResultadoEntrega => {
+    // El título viene del catálogo: las esperas iniciales (de otras personas)
+    // no están en titulos, que solo guarda las esperas propias.
+    ({ isbn, titulo }: Pick<Libro, 'isbn' | 'titulo'>): ResultadoEntrega => {
       const actual = estadoRef.current;
       const cola = actual.esperas[isbn];
       const persona = cola?.frente();
@@ -133,7 +135,6 @@ export function BibliotecaProvider({ children }: Props) {
       else esperas[isbn] = restante;
 
       const esUsuario = persona === USUARIO;
-      const titulo = actual.titulos[isbn] ?? '';
       const prestamos = esUsuario
         ? [
             ...actual.prestamos,
