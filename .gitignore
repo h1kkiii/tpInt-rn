@@ -1,6 +1,4 @@
-# Learn more https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files
-
-# dependencies
+# Dependencias
 node_modules/
 
 # Expo
@@ -9,7 +7,11 @@ dist/
 web-build/
 expo-env.d.ts
 
-# Native
+# Carpetas nativas generadas (CNG)
+/ios
+/android
+
+# Nativo
 .kotlin/
 *.orig.*
 *.jks
@@ -21,7 +23,7 @@ expo-env.d.ts
 # Metro
 .metro-health-check*
 
-# debug
+# Depuración
 npm-debug.*
 yarn-debug.*
 yarn-error.*
@@ -30,14 +32,16 @@ yarn-error.*
 .DS_Store
 *.pem
 
-# local env files
+# Variables de entorno locales
 .env*.local
 
-# typescript
+# TypeScript
 *.tsbuildinfo
 
-example
-
-# generated native folders
-/ios
-/android
+# Material de trabajo local (no se entrega)
+consigna/
+referencia/
+prompts/
+.claude/
+CLAUDE.md
+notas-respuestas.md
