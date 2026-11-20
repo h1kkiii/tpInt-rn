@@ -103,3 +103,10 @@ export const BORDE = {
 } as const;
 
 export const FUENTE_MONO = Platform.select({ ios: 'Menlo', default: 'monospace' });
+
+export const ANCHO_TARJETA_RECIENTE = 150;
+
+export const OPACIDAD = {
+  presionado: 0.8,
+  inactivo: 0.5,
+} as const;
