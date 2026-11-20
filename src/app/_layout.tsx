@@ -1,5 +1,9 @@
-import { Stack } from 'expo-router';
+import { NavegadorRaiz } from '@/components/NavegadorRaiz';
+
+export const unstable_settings = {
+  anchor: '(tabs)',
+};
 
 export default function LayoutRaiz() {
-  return <Stack />;
+  return <NavegadorRaiz />;
 }

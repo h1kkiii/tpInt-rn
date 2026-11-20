@@ -1,3 +1,5 @@
+import { Platform } from 'react-native';
+
 export type Paleta = {
   fondo: string;
   superficie: string;
@@ -99,3 +101,5 @@ export const BORDE = {
   fino: 1,
   grueso: 2,
 } as const;
+
+export const FUENTE_MONO = Platform.select({ ios: 'Menlo', default: 'monospace' });
