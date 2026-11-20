@@ -236,3 +236,151 @@ Comparación con otras alternativas:
 - `React.memo` no alcanza: un componente memorizado igual se re-renderiza si el contexto que consume cambia.
 
 **¿Vale la pena acá?** No. Son pocos componentes, livianos, y los cambios del Context ocurren por acciones de la persona (reservar, devolver, activar un recordatorio), no muchas veces por segundo. Dividir el Context complicaría el código (más providers y más archivos) sin una mejora que alguien pueda notar. Antes de optimizar lo mediría con el Profiler de React DevTools ("Highlight updates when components render"); si un render costara mucho, empezaría por separar la sesión, que es lo que lee el layout raíz.
+
+# Parte C — Navegación y rutas
+
+Mis navegadores (ver el árbol en el README):
+- **Stack raíz**: `src/components/NavegadorRaiz.tsx`, que renderiza `src/app/_layout.tsx` (anchor `'(tabs)'`, `src/app/_layout.tsx:14`).
+- **Tabs**: `src/app/(tabs)/_layout.tsx` ("Catálogo" y "Mis reservas").
+- **Stack de la tab Catálogo**: `src/app/(tabs)/(catalogo)/_layout.tsx` (anchor `'index'`, línea 6), con `index` y `libro/[isbn]`.
+
+## C1. La pila en tu app
+
+Las pilas las comprobé en una copia del proyecto fuera del repo con `renderRouter` (`expo-router/testing-library`) sobre mis rutas reales, imprimiendo `getRouterState()` después de cada paso. Escribo de base a tope.
+
+| # | Acción | Pilas resultantes |
+|---|---|---|
+| 1 | Abre la app. | Stack raíz: `[(tabs)]` · Tabs: Catálogo activa · Stack de la tab Catálogo: `[index]` |
+| 2 | Toca un libro del Catálogo. | Stack raíz: `[(tabs)]` · Stack de la tab Catálogo: `[index, libro/9788499089508]` |
+| 3 | Toca "Reservar". | Stack raíz: `[(tabs), reservar/9788499089508 (modal)]` · Stack de la tab Catálogo: `[index, libro/9788499089508]` |
+| 4 | Toca "Confirmar". | Stack raíz: `[(tabs)]` (el modal sale) · Tabs: **Mis reservas** activa · Stack de la tab Catálogo: `[index, libro/9788499089508]` (queda guardado) |
+| 5 | Toca atrás (Android). | Stack raíz: `[(tabs)]` · Tabs: **Catálogo** activa · Stack de la tab Catálogo: `[index, libro/9788499089508]` → se ve el detalle |
+| 6 | Toca la tab "Catálogo". | Stack raíz: `[(tabs)]` · Stack de la tab Catálogo: `[index]` → se ve el Catálogo |
+
+Salida de la verificación (resumida):
+
+```
+1 /                        __root{(tabs){(catalogo){index}}}
+2 /libro/9788499089508     __root{(tabs){(catalogo){index, libro/[isbn]} | activa=(catalogo)}}
+3 /reservar/9788499089508  __root{(tabs){(catalogo){index, libro/[isbn]} | activa=(catalogo)}, reservar/[isbn]}
+4 /reservas                __root{(tabs){(catalogo){index, libro/[isbn]}, reservas | activa=reservas}}
+5 /libro/9788499089508     __root{(tabs){(catalogo){index, libro/[isbn]}, reservas | activa=(catalogo)}}
+6 /                        __root{(tabs){(catalogo){index}}}
+```
+
+En el paso 5 la tab "Mis reservas" no tiene historia propia; el router de las tabs tiene `backBehavior: 'firstRoute'` por defecto (lo vi en `node_modules/expo-router/build/react-navigation/routers/TabRouter.js`), así que atrás vuelve a la primera tab, que conserva su Stack con el detalle arriba. El paso 5 lo simulé con `router.back()`, que es lo que dispara el botón atrás físico; el botón físico en sí lo tengo que probar en el teléfono.
+
+### a) ¿Qué método usé en el paso 4?
+
+`router.dismissTo('/reservas')` (`src/components/ConfirmacionReserva.tsx:45`), después de aplicar la reserva con `reservar(libro)` (línea 37). `dismissTo` va hacia atrás en el Stack raíz hasta la `(tabs)` que ya existe (saca el modal) y dentro de ella cambia a la tab "Mis reservas".
+
+Qué habría pasado con cada opción:
+- **`push('/reservas')`**: el Stack raíz quedaría `[(tabs), reservar (modal), (tabs)']`: una **segunda** instancia de las tabs encima del modal, porque `/reservas` vive dentro de `(tabs)`. Atrás volvería a la confirmación, y la persona podría tocar "Confirmar" otra vez.
+- **`replace('/reservas')`**: el modal se reemplaza, pero por otra `(tabs)`: el Stack raíz queda `[(tabs), (tabs)']`. Atrás no vuelve a la confirmación, pero sí a la `(tabs)` vieja con el detalle; hay dos Catálogos montados (y dos pedidos a la API).
+- **`dismissTo('/reservas')`** (el que usé): `[(tabs)]` con "Mis reservas" activa. Atrás nunca vuelve a la confirmación y no hay tabs duplicadas.
+
+Elegí `dismissTo` porque cumple las dos cosas que pide la consigna (llevar a `/reservas` y que atrás no vuelva a la confirmación) sin duplicar navegadores. Mientras el modal se cierra sigo mostrando lo que se confirmó (estado `confirmado`, línea 29), porque el Context ya cambió y la previsión diría "ya reservado".
+
+### b) En el paso 6, ¿qué ve la persona?
+
+Ve el **Catálogo**. Al tocar una tab que ya está enfocada, el Stack de esa tab hace `popToTop`: el native stack escucha el evento `tabPress` y, si la tab está enfocada y hay más de una pantalla, vuelve a la primera (lo vi en `node_modules/expo-router/build/react-navigation/native-stack/navigators/createNativeStackNavigator.js`). Si en cambio la persona tocara "Catálogo" estando en "Mis reservas" (sin pasar por el atrás del paso 5), vería primero el detalle, porque el Stack de la tab conservó `[index, libro]`, y con un segundo toque volvería al Catálogo.
+
+Me parece correcto para esta app: es el comportamiento estándar de las apps con pestañas en Android e iOS (cada pestaña recuerda dónde estabas y tocarla de nuevo te lleva a su inicio), y la persona nunca queda sin salida.
+
+## C2. El escáner que dispara de más
+
+### a) `router.push` sin protección
+
+`onBarcodeScanned` se llama muchas veces por segundo mientras el código sigue frente a la cámara. Cada llamada a `router.push` agrega una acción a la cola de acciones de navegación; el navegador las procesa en orden, como la cola del TP 2, y cada una apila un detalle más. Resultado: cinco o diez detalles del mismo libro uno encima del otro, animaciones encadenadas y la persona tiene que tocar atrás muchas veces (y cada atrás vuelve a mostrar el mismo libro). Además, como el detalle vive dentro de `(tabs)`, desde el Stack raíz cada `push` crearía otra `(tabs)` encima.
+
+### b) ¿useState o useRef?
+
+Usé **`useRef`** (`src/hooks/useLecturaIsbn.ts:16`), y la protección está en `abrir` (líneas 36 a 45):
+
+```ts
+const navegando = useRef(false);
+// ...
+const abrir = useCallback(
+  (isbn: string) => {
+    if (navegando.current) return;
+    navegando.current = true;
+    router.dismissTo({ pathname: '/libro/[isbn]', params: { isbn } });
+  },
+  [router],
+);
+```
+
+Un `useState` puesto en `true` en el primer escaneo no alcanza porque `setNavegando(true)` no cambia la variable en el momento: pide un render nuevo. Todas las llamadas de `onBarcodeScanned` que llegan antes de ese render usan la función creada en el render anterior, cuya clausura tiene `navegando === false`, así que todas pasan el `if` y navegan. El ref, en cambio, es el mismo objeto en todos los renders y `navegando.current = true` se ve en la llamada siguiente, aunque no haya habido render. El ref vuelve a `false` cuando la pantalla recupera el foco (línea 24).
+
+### c) ¿Por qué conviene replace para ir del escáner al detalle?
+
+Porque el escáner no tiene que quedar debajo del detalle: si la persona toca atrás, lo esperable es volver al Catálogo, no a la cámara (que además se volvería a encender y podría leer otra vez el mismo código). Con **`push`**, atrás volvería al escáner.
+
+En mi app, en lugar de `replace` uso **`router.dismissTo`** (línea 42), porque en el SDK 58 un `replace` desde el Stack raíz (donde está `/escanear`) hacia una ruta de la tab Catálogo crea **otra** `(tabs)` en lugar de usar la existente:
+
+| Método | Stack raíz después | Stack de la tab Catálogo | Atrás desde el detalle |
+|---|---|---|---|
+| `push` | `[(tabs), escanear, (tabs)']` | en `(tabs)'`: `[index, libro]` | vuelve al escáner (cámara prendida) y quedan dos tabs |
+| `replace` | `[(tabs), (tabs)']` | en `(tabs)'`: `[index, libro]` | vuelve a la `(tabs)` original: tabs duplicadas |
+| `dismissTo` (el mío) | `[(tabs)]` | `[index, libro]` | vuelve al Catálogo |
+
+`dismissTo` logra lo que se busca con `replace` (que el escáner salga de la pila) sin duplicar las tabs.
+
+### d) ISBN que no está en el catálogo
+
+La app muestra un aviso **en la pantalla** (no un `Alert`, que frenaría todo): "El código … no es de ningún libro de la biblioteca. Probá con otro libro o escribí el ISBN abajo." y **sigue escaneando** (`src/hooks/useLecturaIsbn.ts:47-61`). Para que no aparezca diez veces seguidas guardo el último código desconocido en un ref (líneas 56 a 58):
+
+```ts
+if (ultimoDesconocido.current === isbn) return;
+ultimoDesconocido.current = isbn;
+setAviso(MENSAJES.isbnEscaneadoDesconocido(isbn));
+```
+
+Si el mismo código sigue frente a la cámara, las llamadas siguientes salen en el `return`. Un efecto con un temporizador de 4 segundos borra el aviso y su limpieza hace `clearTimeout` (líneas 30 a 34); si aparece un código distinto, el aviso se reemplaza y la limpieza cancela el temporizador anterior antes de empezar uno nuevo. Además, mientras el catálogo está cargando o falló, la cámara no consume lecturas: `onBarcodeScanned` queda en `undefined` (`src/components/VisorCamara.tsx:25`).
+
+## C3. Deep links y rutas protegidas
+
+Probé cada link en la copia de verificación con `renderRouter(..., { initialUrl })`, que hace lo mismo que abrir la URL al iniciar la app. En el teléfono, con Expo Go, el equivalente es `exp://IP:8081/--/libro/9788499089508`, etc. (las URL están en la tabla del README).
+
+| Link | Qué ve la persona | Qué queda debajo en la pila | Qué parte de mi código lo decide |
+|---|---|---|---|
+| `bibliotecaipf://libro/9788499089508` | El detalle de *Ficciones* (título en el header, disponibles, espera y "Reservar") | El Catálogo: Stack de la tab `[index, libro]` dentro de `(tabs)`; atrás → Catálogo | `anchor: 'index'` en `src/app/(tabs)/(catalogo)/_layout.tsx:6` y la validación de `src/hooks/useLibroPorIsbn.ts:18-24` |
+| `bibliotecaipf://libro/123` | "Ese ISBN no es válido", el mensaje "123 no es un ISBN: tiene que tener 13 números, sin letras." y "Volver al catálogo" | Igual: el Catálogo | `esIsbnValido` en `src/hooks/useLibroPorIsbn.ts:18` y `src/components/LibroNoEncontrado.tsx` |
+| `bibliotecaipf://buscar?q=borges` | El buscador con "borges" escrito y sus resultados | Las tabs con el Catálogo: Stack raíz `[(tabs), buscar]`; atrás → Catálogo | `anchor: '(tabs)'` en `src/app/_layout.tsx:14`; `q` se lee con `useLocalSearchParams` en `src/app/buscar.tsx:18` |
+| `bibliotecaipf://mostrador` (sin sesión) | El login (modal "Ingreso del personal") | Las tabs: Stack raíz `[(tabs), login]`; al ingresar, el login se reemplaza por el mostrador | `Stack.Protected guard={sesion} redirectTo="/login"` en `src/components/NavegadorRaiz.tsx:28` |
+| `bibliotecaipf://reserva` | "Mis reservas" | El Stack raíz queda `[(tabs), (tabs)']`: abajo, la `(tabs)` del anchor con el Catálogo; arriba, otra `(tabs)` con "Mis reservas". Atrás → Catálogo | `<Redirect href="/reservas" />` en `src/app/reserva.tsx:5`, que hace un `replace` desde el Stack raíz |
+| `bibliotecaipf://escanear` (cámara bloqueada) | El escáner en estado bloqueado: "Cámara: permiso desactivado", pasos en Ajustes, "Abrir Ajustes" y el campo para escribir el ISBN a mano | Las tabs: Stack raíz `[(tabs), escanear]` | `anchor: '(tabs)'`; `usePermiso('camara')` y `estadoDesde` deciden el estado (`src/components/Escaner.tsx:29-32`) |
+
+Sobre `/reserva`: el `<Redirect>` de expo-router hace `router.replace` (lo vi en `node_modules/expo-router/build/link/Redirect.js`), y un replace desde el Stack raíz hacia una ruta de las tabs crea otra `(tabs)`. Probé dos alternativas para evitarlo (marcar la `(tabs)` como `dangerouslySingular` y mover `reserva.tsx` adentro de `(tabs)` oculta de la barra) y ninguna funcionó bien: la primera seguía duplicando y la segunda terminaba en `/`. Como la persona igual ve "Mis reservas" y atrás la lleva al Catálogo, dejé el `<Redirect>` en el raíz, como pide la consigna.
+
+En Expo Go, la URL con el esquema `bibliotecaipf://` no abre la app (el esquema propio lo registra un development build); por eso las pruebas en el teléfono son con `exp://IP:8081/--/…`.
+
+**¿Por qué `/libro/123` llega a mi pantalla de detalle aunque no exista ese libro?** Porque Expo Router solo compara la **forma** de la URL con el árbol de archivos: `libro/[isbn].tsx` es un segmento dinámico que acepta cualquier valor, así que `123` es un `isbn` tan válido como cualquier otro para el router. El router no sabe nada de libros ni de ISBN. La responsabilidad de responder bien es de **mi pantalla**: tiene que validar el parámetro (formato y existencia) y mostrar un mensaje claro con una salida. Por eso todo pasa por `useLibroPorIsbn` (`src/hooks/useLibroPorIsbn.ts`), que también usa la confirmación de reserva.
+
+## C4. Foco, montaje y primer plano
+
+### a) Qué detecta cada una
+
+- **`useEffect` con `[]`**: el **montaje** del componente (y su desmontaje, en la limpieza). Corre una sola vez mientras el componente siga montado.
+- **`useFocusEffect`**: que la pantalla **gana el foco** dentro de la navegación (y en la limpieza, que lo pierde): al montarse enfocada, al volver desde otra pantalla apilada encima, al cerrarse un modal o al volver a su tab.
+- **`AppState`**: que **la app entera** cambia entre primer plano y segundo plano (`active`, `background`, `inactive`), por ejemplo al ir a Ajustes y volver.
+
+### b) Quién se entera
+
+- La persona sale a Ajustes, habilita las notificaciones y vuelve: se entera solo **AppState** (la app pasa de `background` a `active`). Para la navegación la pantalla nunca perdió el foco y el componente nunca se desmontó.
+- Va a la pestaña Catálogo y vuelve a "Mis reservas": se entera solo **`useFocusEffect`**. Las tabs no desmontan la pantalla (lo comprobé en B1b), así que un `useEffect` con `[]` no vuelve a correr, y la app nunca salió de primer plano.
+
+### c) Cuáles usé
+
+En `usePermiso` (`src/hooks/usePermiso.ts`) uso **las dos que hacen falta juntas**:
+- `useFocusEffect` (línea 65): consulta al montar y cada vez que la pantalla recupera el foco. Es lo que hace que el escáner cambie de estado solo cuando se cierra el modal `/permisos/camara`. Tiene limpieza: un flag `vigente` descarta la respuesta si la pantalla perdió el foco antes de que llegara.
+- `useRevisarAlVolver` (línea 84; `src/hooks/useRevisarAlVolver.ts:11-14`): se suscribe a `AppState` y vuelve a consultar cuando la app pasa de no activa a `active`, por ejemplo al volver de Ajustes. La suscripción se limpia con `suscripcion.remove()`.
+
+No uso un `useEffect` con `[]` aparte porque `useFocusEffect` ya corre al montar si la pantalla está enfocada.
+
+En "Mis reservas" no guardo el estado del permiso de notificaciones: lo **consulto en el momento** en que la persona activa "Recordarme" (`src/hooks/useRecordatorios.ts:111`) y, si se abrió el modal, otra vez cuando la pantalla recupera el foco (línea 85). Así nunca decido con un valor viejo.
+
+Si hubiera usado solo una:
+- Solo `useEffect` con `[]`: el escáner seguiría mostrando "preguntable" después de conceder el permiso en el modal (la pantalla no se desmonta) y "bloqueado" después de habilitarlo en Ajustes.
+- Solo `useFocusEffect`: si la persona tiene el escáner abierto, va a Ajustes, habilita la cámara y vuelve, la pantalla seguiría en "bloqueado" (nunca perdió el foco) hasta que saliera y volviera a entrar.
+- Solo `AppState`: después de cerrar el modal de permisos la pantalla seguiría en "preguntable", porque la app nunca salió de primer plano.
