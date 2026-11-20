@@ -20,4 +20,6 @@ export const MENSAJES = {
   reservaRepetida: 'Esta reserva ya estaba hecha: no se anotó dos veces.',
   sinPrestamos: 'No tenés libros prestados. Cuando reserves uno con ejemplares, aparece acá con su fecha de devolución.',
   sinEsperas: 'No estás en ninguna lista de espera.',
+  recursoDesconocido: (recurso: string) =>
+    `No conocemos el permiso "${recurso}". La app solo usa la cámara y las notificaciones.`,
 } as const;

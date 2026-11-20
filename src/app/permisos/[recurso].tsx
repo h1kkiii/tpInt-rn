@@ -1,5 +1,12 @@
-import { PantallaProvisoria } from '@/components/PantallaProvisoria';
+import { useLocalSearchParams } from 'expo-router';
 
-export default function PermisoPrevio() {
-  return <PantallaProvisoria titulo="Permiso" />;
+import { PermisoPrevio } from '@/components/PermisoPrevio';
+import { RecursoDesconocido } from '@/components/RecursoDesconocido';
+import { esRecurso } from '@/lib/permisos';
+import { primerValor } from '@/lib/parametros';
+
+export default function Permiso() {
+  const { recurso } = useLocalSearchParams<{ recurso: string }>();
+  const valor = primerValor(recurso);
+  return esRecurso(valor) ? <PermisoPrevio recurso={valor} /> : <RecursoDesconocido recurso={valor} />;
 }
