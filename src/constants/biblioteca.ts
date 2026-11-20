@@ -10,3 +10,6 @@ export const CREDENCIALES = {
 export const DIAS_PRESTAMO = 7;
 
 export const CANTIDAD_RECIENTES = 3;
+
+// Debounce del buscador: espera este tiempo sin teclas antes de pedir.
+export const DEMORA_BUSQUEDA_MS = 300;

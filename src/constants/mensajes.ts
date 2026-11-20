@@ -13,4 +13,8 @@ export const MENSAJES = {
       : `"${isbn}" no es un ISBN: tiene que tener 13 números, sin letras.`,
   tituloLibroInexistente: 'No tenemos ese libro',
   libroInexistente: (isbn: string) => `No encontramos ningún libro con el ISBN ${isbn} en el catálogo de la biblioteca.`,
+  busquedaVacia: 'Escribí un título o un autor',
+  buscando: 'Buscando…',
+  errorBusqueda: 'No pudimos buscar en este momento. Probá de nuevo.',
+  sinResultados: (consulta: string) => `No encontramos libros para "${consulta}"`,
 } as const;
