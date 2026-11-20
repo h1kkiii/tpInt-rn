@@ -2,7 +2,7 @@ import { Camera, type PermissionResponse } from 'expo-camera';
 
 import { consultarPermisoNotificaciones, pedirPermisoNotificaciones } from '@/lib/notificaciones';
 
-export const RECURSOS = ['camara', 'notificaciones'] as const;
+const RECURSOS = ['camara', 'notificaciones'] as const;
 export type Recurso = (typeof RECURSOS)[number];
 
 export type EstadoPermiso = 'cargando' | 'concedido' | 'preguntable' | 'bloqueado';

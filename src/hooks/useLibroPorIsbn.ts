@@ -2,7 +2,7 @@ import { useLibros } from '@/hooks/useLibros';
 import { esIsbnValido, primerValor, type ParametroRuta } from '@/lib/parametros';
 import type { Libro } from '@/types';
 
-export type EstadoLibroPorIsbn =
+type EstadoLibroPorIsbn =
   | { estado: 'invalido'; isbn: string }
   | { estado: 'cargando'; isbn: string }
   | { estado: 'error'; isbn: string; reintentar: () => void }

@@ -15,7 +15,7 @@ const SIN_ACCESO: PermissionResponse = {
   expires: 'never',
 };
 
-export type ResultadoPermiso = {
+type ResultadoPermiso = {
   estado: EstadoPermiso;
   pedir: () => Promise<PermissionResponse>;
   consultar: () => Promise<PermissionResponse>;

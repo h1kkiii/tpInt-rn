@@ -26,7 +26,7 @@ export function formatearFecha(fecha: Date): string {
   return `${DIAS[fecha.getDay()]} ${fecha.getDate()} de ${MESES[fecha.getMonth()]}`;
 }
 
-export type MomentoRecordatorio = { tipo: 'segundos'; segundos: number } | { tipo: 'fecha'; fecha: Date };
+type MomentoRecordatorio = { tipo: 'segundos'; segundos: number } | { tipo: 'fecha'; fecha: Date };
 
 // Cuándo llega el recordatorio: en modo demostración, a los pocos segundos;
 // si no, un día antes de la devolución. Si ese día ya pasó, en la demora corta.

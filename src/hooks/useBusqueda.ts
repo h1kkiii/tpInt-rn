@@ -11,7 +11,7 @@ type Respuesta = {
   error: boolean;
 };
 
-export type EstadoBusqueda = {
+type EstadoBusqueda = {
   libros: Libro[];
   cargando: boolean;
   error: boolean;

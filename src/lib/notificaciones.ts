@@ -17,7 +17,7 @@ import { formatearFecha, momentoRecordatorio } from '@/lib/fechas';
 import type { Prestamo } from '@/types/biblioteca';
 
 // Canal de Android donde viajan los recordatorios de devolución.
-export const CANAL_PRESTAMOS = 'prestamos';
+const CANAL_PRESTAMOS = 'prestamos';
 
 // Cómo se muestra una notificación que llega con la app abierta.
 // Se llama una sola vez, desde el layout raíz.
@@ -36,7 +36,7 @@ export function configurarManejadorDeNotificaciones() {
 // tiene al menos un canal: por eso se crea ANTES de pedir el permiso.
 // Devuelve false si no se pudo (Expo Go en Android puede fallar acá): en ese
 // caso se sigue igual y la notificación usa el canal por defecto.
-export async function crearCanalPrestamos(): Promise<boolean> {
+async function crearCanalPrestamos(): Promise<boolean> {
   if (Platform.OS !== 'android') return true;
   try {
     await setNotificationChannelAsync(CANAL_PRESTAMOS, {
