@@ -1,9 +1,14 @@
 import { NavegadorRaiz } from '@/components/NavegadorRaiz';
+import { BibliotecaProvider } from '@/context/BibliotecaContext';
 
 export const unstable_settings = {
   anchor: '(tabs)',
 };
 
 export default function LayoutRaiz() {
-  return <NavegadorRaiz />;
+  return (
+    <BibliotecaProvider>
+      <NavegadorRaiz />
+    </BibliotecaProvider>
+  );
 }

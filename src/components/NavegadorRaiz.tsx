@@ -1,8 +1,9 @@
 import { Stack } from 'expo-router';
-import { useState } from 'react';
+
+import { useBiblioteca } from '@/hooks/useBiblioteca';
 
 export function NavegadorRaiz() {
-  const [sesion] = useState(false);
+  const { sesion } = useBiblioteca();
   return (
     <Stack>
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
