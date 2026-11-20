@@ -13,3 +13,6 @@ export const CANTIDAD_RECIENTES = 3;
 
 // Debounce del buscador: espera este tiempo sin teclas antes de pedir.
 export const DEMORA_BUSQUEDA_MS = 300;
+
+// Cuánto queda en pantalla el aviso de "ISBN desconocido" del escáner.
+export const DURACION_AVISO_ESCANER_MS = 4000;

@@ -110,3 +110,5 @@ export const OPACIDAD = {
   presionado: 0.8,
   inactivo: 0.5,
 } as const;
+
+export const ALTO_VISOR_CAMARA = 320;

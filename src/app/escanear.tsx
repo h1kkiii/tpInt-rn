@@ -1,5 +1,5 @@
-import { PantallaProvisoria } from '@/components/PantallaProvisoria';
+import { Escaner } from '@/components/Escaner';
 
 export default function Escanear() {
-  return <PantallaProvisoria titulo="Escanear" />;
+  return <Escaner />;
 }

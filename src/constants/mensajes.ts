@@ -20,6 +20,14 @@ export const MENSAJES = {
   reservaRepetida: 'Esta reserva ya estaba hecha: no se anotó dos veces.',
   sinPrestamos: 'No tenés libros prestados. Cuando reserves uno con ejemplares, aparece acá con su fecha de devolución.',
   sinEsperas: 'No estás en ninguna lista de espera.',
+  revisandoCamara: 'Revisando el permiso de la cámara…',
+  cargandoCatalogoEscaner: 'Cargando el catálogo para reconocer los libros…',
+  isbnEscaneadoDesconocido: (isbn: string) =>
+    `El código ${isbn} no es de ningún libro de la biblioteca. Probá con otro libro o escribí el ISBN abajo.`,
+  isbnManualVacio: 'Escribí el ISBN: son 13 números que están en la contratapa.',
+  isbnManualConLetras: 'El ISBN lleva solo números (los guiones y espacios no importan).',
+  isbnManualLargo: (cantidad: number) => `El ISBN tiene 13 números y escribiste ${cantidad}.`,
+  isbnManualSinCatalogo: 'Todavía no tenemos el catálogo para buscar ese ISBN. Esperá a que cargue o tocá "Reintentar".',
   recursoDesconocido: (recurso: string) =>
     `No conocemos el permiso "${recurso}". La app solo usa la cámara y las notificaciones.`,
 } as const;
