@@ -59,3 +59,8 @@ export function preverReserva(
   }
   return { tipo: 'espera', posicion: personasEnEspera(cola) + 1 };
 }
+
+export function textoPersonas(cantidad: number): string {
+  if (cantidad === 0) return 'Nadie';
+  return cantidad === 1 ? '1 persona' : cantidad + ' personas';
+}
