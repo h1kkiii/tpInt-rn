@@ -22,6 +22,8 @@ export const MENSAJES = {
   sinEsperas: 'No estás en ninguna lista de espera.',
   sinNotificaciones: 'Sin notificaciones no podemos recordártelo, pero la fecha de devolución queda siempre acá.',
   recordatorioNoProgramado: 'No pudimos programar el recordatorio. La fecha de devolución queda siempre acá.',
+  loginIncompleto: 'Completá el usuario y la clave.',
+  loginIncorrecto: 'El usuario o la clave no son correctos. Revisalos y probá de nuevo.',
   revisandoCamara: 'Revisando el permiso de la cámara…',
   cargandoCatalogoEscaner: 'Cargando el catálogo para reconocer los libros…',
   isbnEscaneadoDesconocido: (isbn: string) =>

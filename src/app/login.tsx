@@ -1,5 +1,5 @@
-import { PantallaProvisoria } from '@/components/PantallaProvisoria';
+import { FormularioLogin } from '@/components/FormularioLogin';
 
 export default function Login() {
-  return <PantallaProvisoria titulo="Ingreso del personal" />;
+  return <FormularioLogin />;
 }
