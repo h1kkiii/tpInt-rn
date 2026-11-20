@@ -17,4 +17,5 @@ export const MENSAJES = {
   buscando: 'Buscando…',
   errorBusqueda: 'No pudimos buscar en este momento. Probá de nuevo.',
   sinResultados: (consulta: string) => `No encontramos libros para "${consulta}"`,
+  reservaRepetida: 'Esta reserva ya estaba hecha: no se anotó dos veces.',
 } as const;
