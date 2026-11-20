@@ -11,7 +11,7 @@ type Props = {
 };
 
 export function ItemReservas({ item, recordatorios }: Props) {
-  const { devolver, descartarAviso } = useBiblioteca();
+  const { descartarAviso } = useBiblioteca();
   switch (item.tipo) {
     case 'aviso':
       return <TarjetaAviso aviso={item.aviso} onDescartar={descartarAviso} />;
@@ -21,7 +21,7 @@ export function ItemReservas({ item, recordatorios }: Props) {
           prestamo={item.prestamo}
           recordatorio={recordatorios.estadoDe(item.prestamo)}
           onAlternarRecordatorio={recordatorios.alternar}
-          onDevolver={devolver}
+          onDevolver={recordatorios.devolver}
         />
       );
     case 'espera':

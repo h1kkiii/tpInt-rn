@@ -15,6 +15,7 @@ export type EstadoRecordatorio = {
 export type Recordatorios = {
   estadoDe: (prestamo: Prestamo) => EstadoRecordatorio;
   alternar: (prestamo: Prestamo, activar: boolean) => void;
+  devolver: (isbn: string) => void;
 };
 
 async function permisoConcedido(): Promise<boolean> {
@@ -26,7 +27,7 @@ async function permisoConcedido(): Promise<boolean> {
 }
 
 export function useRecordatorios(): Recordatorios {
-  const { prestamos, definirRecordatorio } = useBiblioteca();
+  const { prestamos, definirRecordatorio, devolver: devolverPrestamo } = useBiblioteca();
   const router = useRouter();
   // isbn del préstamo que espera la respuesta del modal de permisos.
   const [pendiente, setPendiente] = useState<string | null>(null);
@@ -71,7 +72,9 @@ export function useRecordatorios(): Recordatorios {
         escribirMensaje(prestamo.isbn, MENSAJES.recordatorioNoProgramado);
         return;
       }
-      definirRecordatorio(prestamo.isbn, id);
+      // Si el libro se devolvió mientras se programaba, el préstamo ya no
+      // existe: la notificación se cancela apenas se conoce su id.
+      if (!definirRecordatorio(prestamo.isbn, id)) await cancelarRecordatorio(id);
     },
     [definirRecordatorio, escribirMensaje, marcarOcupado],
   );
@@ -133,6 +136,17 @@ export function useRecordatorios(): Recordatorios {
     [activar, desactivar],
   );
 
+  // devolver() del Context devuelve el préstamo quitado: con su id se cancela
+  // la notificación pendiente, así no queda ningún id huérfano.
+  const devolver = useCallback(
+    (isbn: string) => {
+      escribirMensaje(isbn, null);
+      const prestamo = devolverPrestamo(isbn);
+      if (prestamo?.notificacionId) cancelarRecordatorio(prestamo.notificacionId);
+    },
+    [devolverPrestamo, escribirMensaje],
+  );
+
   const estadoDe = useCallback(
     (prestamo: Prestamo): EstadoRecordatorio => {
       const ocupado = pendiente === prestamo.isbn || ocupados.includes(prestamo.isbn);
@@ -141,5 +155,5 @@ export function useRecordatorios(): Recordatorios {
     [mensajes, ocupados, pendiente],
   );
 
-  return { estadoDe, alternar };
+  return { estadoDe, alternar, devolver };
 }
