@@ -1,10 +1,12 @@
 import { Tabs } from 'expo-router/js-tabs';
 
 import { IconoTab } from '@/components/IconoTab';
+import { useTema } from '@/hooks/useTema';
 
 export default function LayoutTabs() {
+  const paleta = useTema();
   return (
-    <Tabs>
+    <Tabs screenOptions={{ tabBarActiveTintColor: paleta.primario, tabBarInactiveTintColor: paleta.textoSecundario }}>
       <Tabs.Screen
         name="(catalogo)"
         options={{
