@@ -36,3 +36,21 @@ export type ResultadoReserva =
 export type ResultadoEntrega =
   | { tipo: 'entregado'; persona: string; esUsuario: boolean; titulo: string }
   | { tipo: 'sin-espera' };
+
+export type EsperaPropia = {
+  isbn: string;
+  titulo: string;
+  posicion: number;
+};
+
+export type ItemReservas =
+  | { tipo: 'aviso'; aviso: Aviso }
+  | { tipo: 'prestamo'; isbn: string; prestamo: Prestamo }
+  | { tipo: 'espera'; isbn: string; espera: EsperaPropia };
+
+export type SeccionReservas = {
+  clave: 'avisos' | 'prestamos' | 'esperas';
+  titulo: string;
+  vacio: string | null;
+  data: ItemReservas[];
+};

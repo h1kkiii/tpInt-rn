@@ -18,4 +18,6 @@ export const MENSAJES = {
   errorBusqueda: 'No pudimos buscar en este momento. Probá de nuevo.',
   sinResultados: (consulta: string) => `No encontramos libros para "${consulta}"`,
   reservaRepetida: 'Esta reserva ya estaba hecha: no se anotó dos veces.',
+  sinPrestamos: 'No tenés libros prestados. Cuando reserves uno con ejemplares, aparece acá con su fecha de devolución.',
+  sinEsperas: 'No estás en ninguna lista de espera.',
 } as const;
