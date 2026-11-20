@@ -21,3 +21,6 @@ export const DURACION_AVISO_ESCANER_MS = 4000;
 // antes del vencimiento (para poder probarlo en clase).
 export const MODO_DEMOSTRACION = true;
 export const SEGUNDOS_DEMOSTRACION = 15;
+
+// Debounce del guardado en AsyncStorage.
+export const DEMORA_GUARDADO_MS = 400;

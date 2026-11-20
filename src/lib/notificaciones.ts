@@ -1,6 +1,7 @@
 import {
   AndroidImportance,
   cancelScheduledNotificationAsync,
+  getAllScheduledNotificationsAsync,
   getPermissionsAsync,
   requestPermissionsAsync,
   scheduleNotificationAsync,
@@ -101,6 +102,17 @@ export async function notificarLibroDisponible(titulo: string): Promise<boolean>
     return true;
   } catch {
     return false;
+  }
+}
+
+// Ids de las notificaciones que el sistema tiene programadas, o null si no se
+// pudo consultar (en ese caso no se toca nada de lo guardado).
+export async function identificadoresProgramados(): Promise<Set<string> | null> {
+  try {
+    const programadas = await getAllScheduledNotificationsAsync();
+    return new Set(programadas.map((notificacion) => notificacion.identifier));
+  } catch {
+    return null;
   }
 }
 

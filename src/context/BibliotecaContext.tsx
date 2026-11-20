@@ -2,6 +2,7 @@ import { createContext, useCallback, useMemo, useRef, useState, type ReactNode }
 
 import { CANTIDAD_RECIENTES, CREDENCIALES, DIAS_PRESTAMO, USUARIO } from '@/constants/biblioteca';
 import { Cola } from '@/estructuras/Cola';
+import { usePersistencia } from '@/hooks/usePersistencia';
 import { crearEstadoInicial, preverReserva } from '@/lib/biblioteca';
 import { cambiarCola, cambiarPila } from '@/lib/copiaAlEscribir';
 import { sumarDias } from '@/lib/fechas';
@@ -53,6 +54,9 @@ export function BibliotecaProvider({ children }: Props) {
     estadoRef.current = nuevo;
     setEstado(nuevo);
   }, []);
+
+  const leerActual = useCallback(() => estadoRef.current, []);
+  const hidratado = usePersistencia(estado, leerActual, aplicar);
 
   const reservar = useCallback(
     (libro: Libro): ResultadoReserva => {
@@ -223,5 +227,7 @@ export function BibliotecaProvider({ children }: Props) {
     ],
   );
 
+  // No dibuja nada hasta hidratar: nunca se ve la app "vacía" un instante.
+  if (!hidratado) return null;
   return <BibliotecaContext.Provider value={valor}>{children}</BibliotecaContext.Provider>;
 }
